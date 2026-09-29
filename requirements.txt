@@ -1,0 +1,6 @@
+Flask
+flask-cors
+Werkzeug
+fpdf2
+libsql-client
+python-dotenv

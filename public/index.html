@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Tienda Online - Catálogo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            background-color: #f8fafc;
+            color: #0f172a;
+            padding-bottom: 50px;
+        }
+        header {
+            background-color: #0f172a;
+            color: #ffffff;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+        header a.logo {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .cart-btn {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s ease;
+        }
+        .cart-btn:hover {
+            background-color: #1d4ed8;
+        }
+        .cart-count-badge {
+            background-color: #ffffff;
+            color: #2563eb;
+            border-radius: 50%;
+            padding: 2px 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        /* Barra de Filtro por Categorías */
+        .categorias-section {
+            margin-bottom: 2rem;
+        }
+        .categorias-title {
+            font-size: 0.85rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        .categorias-container {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        .cat-btn {
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 8px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-weight: 500;
+            color: #334155;
+            transition: all 0.2s ease;
+        }
+        .cat-btn:hover, .cat-btn.activo {
+            background-color: #0f172a;
+            color: #ffffff;
+            border-color: #0f172a;
+        }
+        
+        /* Grilla de Productos */
+        .productos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.5rem;
+        }
+        .card-producto {
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-producto:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+        .card-img-container {
+            width: 100%;
+            height: 220px;
+            background-color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .card-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .card-body {
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        .card-categoria {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+        .card-titulo {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-decoration: none;
+            color: #0f172a;
+            line-height: 1.3;
+        }
+        .card-titulo:hover {
+            color: #2563eb;
+        }
+        .card-precio {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 15px;
+            margin-top: auto;
+        }
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-ver {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            flex: 1;
+        }
+        .btn-agregar {
+            background-color: #0f172a;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            flex: 2;
+            transition: background 0.2s;
+        }
+        .btn-agregar:hover {
+            background-color: #1e293b;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(2px);
+            z-index: 150;
+            display: none;
+        }
+        .overlay.activo { display: block; }
+
+        /* Drawer del Carrito Lateral */
+        .cart-drawer {
+            position: fixed;
+            top: 0;
+            right: -420px;
+            width: 400px;
+            max-width: 100%;
+            height: 100%;
+            background: #ffffff;
+            box-shadow: -4px 0 25px rgba(0,0,0,0.15);
+            z-index: 200;
+            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+        }
+        .cart-drawer.abierto { right: 0; }
+        
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .cart-header h3 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .cart-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #475569;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .cart-items {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem 0;
+        }
+        .cart-item {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 12px;
+        }
+        .cart-item img {
+            width: 55px;
+            height: 55px;
+            object-fit: cover;
+            border-radius: 8px;
+            background-color: #f8fafc;
+        }
+        .cart-item-info { flex-grow: 1; }
+        .cart-item-info h4 { font-size: 0.95rem; font-weight: 600; color: #0f172a; }
+        .cart-item-info p { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
+        .btn-eliminar {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 4px;
+        }
+
+        .cart-footer {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1.2rem;
+            margin-top: auto;
+        }
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 1.2rem;
+        }
+        .checkout-btn {
+            background-color: #2563eb;
+            color: #ffffff;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .checkout-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        /* Modal Formularios */
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            z-index: 300;
+            width: 90%;
+            max-width: 480px;
+            display: none;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        .modal.activo { display: block; }
+        .modal h2 { margin-bottom: 1rem; font-size: 1.3rem; color: #0f172a; }
+        .modal label { font-size: 0.85rem; font-weight: 600; color: #475569; }
+        .modal input {
+            width: 100%;
+            padding: 10px 12px;
+            margin: 6px 0 16px 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            background-color: #f8fafc;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .btn-cancelar {
+            background: #e2e8f0;
+            color: #334155;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            flex: 1;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-confirmar {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            flex: 2;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo">🛒 Mi Tienda</a>
+        <div class="header-actions">
+            <!-- Contenedor dinámico para Iniciar Sesión / Saludo al Usuario -->
+            <div id="user-nav-container"></div>
+            
+            <button class="cart-btn" id="open-cart-btn" onclick="abrirCarrito()">
+                <span>Carrito</span>
+                <span class="cart-count-badge" id="cart-count">0</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Sección de Filtro por Categorías -->
+        <div class="categorias-section">
+            <div class="categorias-title">Filtrar por Categoría</div>
+            <div class="categorias-container" id="categorias-bar">
+                <button class="cat-btn activo" onclick="filtrarCategoria('todas')">Todas</button>
+            </div>
+        </div>
+
+        <!-- Grilla del Catálogo de Productos -->
+        <div class="productos-grid" id="productos-container">
+            <p>Cargando productos...</p>
+        </div>
+    </div>
+
+    <!-- Overlay de Fondo Oscuro -->
+    <div class="overlay" id="overlay" onclick="cerrarCarrito(); cerrarModal();"></div>
+
+    <!-- Drawer Lateral del Carrito -->
+    <div class="cart-drawer" id="cart-drawer">
+        <div class="cart-header">
+            <h3>Tu Carrito</h3>
+            <button class="cart-close-btn" onclick="cerrarCarrito()">&times;</button>
+        </div>
+        
+        <div class="cart-items" id="cart-items-container">
+            <!-- Los productos agregados se renderizan dinámicamente aquí -->
+        </div>
+
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total-price">$0.00</span>
+            </div>
+            <button class="checkout-btn" onclick="abrirModalCheckout()">Procesar Compra del Carrito</button>
+        </div>
+    </div>
+
+    <!-- Modal Formulario Datos del Cliente -->
+    <div class="modal" id="checkout-modal">
+        <h2>Datos del Comprador Autenticado</h2>
+        <form id="checkout-form" onsubmit="procesarPedido(event)">
+            <label for="cliente-nombre">Nombre Completo</label>
+            <input type="text" id="cliente-nombre" required readonly>
+
+            <label for="cliente-correo">Correo Electrónico (Recibirá Factura PDF)</label>
+            <input type="email" id="cliente-correo" required readonly>
+
+            <label for="cliente-telefono">Teléfono de Contacto</label>
+            <input type="tel" id="cliente-telefono" required readonly>
+
+            <div class="modal-buttons">
+                <button type="button" class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+                <button type="submit" class="btn-confirmar">Confirmar y Pagado</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
