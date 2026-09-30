@@ -35,7 +35,7 @@ def get_db_client():
 class FacturaPDF(FPDF):
     def header(self):
         self.set_font('Helvetica', 'B', 16)
-        self.cell(0, 10, 'COMPROBANTE DE COMPRA', dest=0, align='C')
+        self.cell(0, 10, 'COMPROBANTE DE COMPRA', align='C')
         self.ln(12)
 
     def footer(self):
@@ -49,12 +49,12 @@ def generar_pdf_bytes(id_pedido, usuario, items, total):
     
     # Encabezado Tienda
     pdf.set_font('Helvetica', 'B', 14)
-    pdf.cell(0, 8, 'Mi Tienda Online', ln=True)
+    pdf.cell(0, 8, 'Mi Tienda Online', ln=1)
     pdf.set_font('Helvetica', '', 10)
-    pdf.cell(0, 5, f'Pedido #: {id_pedido}', ln=True)
-    pdf.cell(0, 5, f'Cliente: {usuario["nombre"]}', ln=True)
-    pdf.cell(0, 5, f'Correo: {usuario["correo"]}', ln=True)
-    pdf.cell(0, 5, f'Telefono: {usuario["telefono"]}', ln=True)
+    pdf.cell(0, 5, f'Pedido #: {id_pedido}', ln=1)
+    pdf.cell(0, 5, f'Cliente: {usuario["nombre"]}', ln=1)
+    pdf.cell(0, 5, f'Correo: {usuario["correo"]}', ln=1)
+    pdf.cell(0, 5, f'Telefono: {usuario["telefono"]}', ln=1)
     pdf.ln(8)
     
     # Tabla de Productos
@@ -80,11 +80,15 @@ def generar_pdf_bytes(id_pedido, usuario, items, total):
     
     # Exportar a buffer en memoria
     pdf_buffer = io.BytesIO()
-    pdf_string = pdf.output(dest='S')
-    if isinstance(pdf_string, str):
-        pdf_buffer.write(pdf_string.encode('latin1'))
+    try:
+        pdf_output = pdf.output(dest='S')
+    except TypeError:
+        pdf_output = pdf.output()
+
+    if isinstance(pdf_output, str):
+        pdf_buffer.write(pdf_output.encode('latin1'))
     else:
-        pdf_buffer.write(pdf_string)
+        pdf_buffer.write(pdf_output)
     pdf_buffer.seek(0)
     return pdf_buffer.getvalue()
 
