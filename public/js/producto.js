@@ -22,7 +22,8 @@ async function obtenerDetalleProducto() {
     }
 
     try {
-        const res = await fetch(`/api/producto/${idProducto}`);
+        // Corregido: /api/productos/ en plural
+        const res = await fetch(`/api/productos/${idProducto}`);
         const data = await res.json();
 
         if (!data.exito || !data.producto) {
