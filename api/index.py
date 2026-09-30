@@ -157,28 +157,30 @@ TOTAL A COBRAR: ${total:.2f}
 
 @app.route('/api/registro', methods=['POST'])
 def registro():
-    data = request.get_json()
+    data = request.get_json() or {}
     nombre = data.get('nombre')
     correo = data.get('correo')
-    telefono = data.get('telefono')
+    telefono = data.get('telefono', '')
     contrasena = data.get('contrasena')
 
     if not nombre or not correo or not contrasena:
         return jsonify({'exito': False, 'mensaje': 'Faltan datos obligatorios'}), 400
 
-    db = get_db_client()
     try:
+        db = get_db_client()
         res = db.execute("SELECT id_usuario FROM usuarios WHERE correo = ?", [correo])
         if len(res.rows) > 0:
             return jsonify({'exito': False, 'mensaje': 'El correo ya está registrado'}), 400
 
         hash_pass = generate_password_hash(contrasena)
-        res_insert = db.execute(
+        db.execute(
             "INSERT INTO usuarios (nombre, correo, telefono, contrasena) VALUES (?, ?, ?, ?)",
             [nombre, correo, telefono, hash_pass]
         )
         
-        id_nuevo = res_insert.last_insert_rowid
+        res_nuevo = db.execute("SELECT id_usuario FROM usuarios WHERE correo = ?", [correo])
+        id_nuevo = res_nuevo.rows[0][0] if len(res_nuevo.rows) > 0 else None
+
         usuario = {
             'id_usuario': id_nuevo,
             'nombre': nombre,
@@ -187,16 +189,17 @@ def registro():
         }
         return jsonify({'exito': True, 'usuario': usuario})
     except Exception as e:
-        return jsonify({'exito': False, 'mensaje': str(e)}), 500
+        print("Error en registro:", e)
+        return jsonify({'exito': False, 'mensaje': f'Error en base de datos: {str(e)}'}), 500
 
 @app.route('/api/login', methods=['POST'])
 def login():
-    data = request.get_json()
+    data = request.get_json() or {}
     correo = data.get('correo')
     contrasena = data.get('contrasena')
 
-    db = get_db_client()
     try:
+        db = get_db_client()
         res = db.execute("SELECT id_usuario, nombre, correo, telefono, contrasena FROM usuarios WHERE correo = ?", [correo])
         if len(res.rows) == 0:
             return jsonify({'exito': False, 'mensaje': 'Credenciales inválidas'}), 401
@@ -215,12 +218,13 @@ def login():
         else:
             return jsonify({'exito': False, 'mensaje': 'Credenciales inválidas'}), 401
     except Exception as e:
+        print("Error en login:", e)
         return jsonify({'exito': False, 'mensaje': str(e)}), 500
 
 @app.route('/api/categorias', methods=['GET'])
 def obtener_categorias():
-    db = get_db_client()
     try:
+        db = get_db_client()
         res = db.execute("SELECT DISTINCT categoria FROM productos WHERE categoria IS NOT NULL")
         categorias = [row[0] for row in res.rows if row[0]]
         return jsonify({'exito': True, 'categorias': categorias})
@@ -230,8 +234,8 @@ def obtener_categorias():
 @app.route('/api/productos', methods=['GET'])
 def obtener_productos():
     categoria = request.args.get('categoria')
-    db = get_db_client()
     try:
+        db = get_db_client()
         if categoria and categoria.lower() != 'todas':
             res = db.execute("SELECT id_producto, nombre, descripcion, precio, imagen_url, categoria FROM productos WHERE categoria = ?", [categoria])
         else:
@@ -253,8 +257,8 @@ def obtener_productos():
 
 @app.route('/api/productos/<int:id_producto>', methods=['GET'])
 def obtener_producto_detalle(id_producto):
-    db = get_db_client()
     try:
+        db = get_db_client()
         res = db.execute("SELECT id_producto, nombre, descripcion, precio, imagen_url, categoria FROM productos WHERE id_producto = ?", [id_producto])
         if len(res.rows) == 0:
             return jsonify({'exito': False, 'mensaje': 'Producto no encontrado'}), 404
@@ -274,15 +278,15 @@ def obtener_producto_detalle(id_producto):
 
 @app.route('/api/crear-pedido', methods=['POST'])
 def crear_pedido():
-    data = request.get_json()
+    data = request.get_json() or {}
     id_usuario = data.get('id_usuario')
     items = data.get('items', [])
 
     if not id_usuario or len(items) == 0:
         return jsonify({'exito': False, 'mensaje': 'Datos de pedido incompletos'}), 400
 
-    db = get_db_client()
     try:
+        db = get_db_client()
         res_usr = db.execute("SELECT nombre, correo, telefono FROM usuarios WHERE id_usuario = ?", [id_usuario])
         if len(res_usr.rows) == 0:
             return jsonify({'exito': False, 'mensaje': 'Usuario no existe'}), 404
@@ -297,11 +301,13 @@ def crear_pedido():
 
         monto_total = sum(float(item['precio']) * int(item['cantidad']) for item in items)
 
-        res_ped = db.execute(
+        db.execute(
             "INSERT INTO pedidos (id_usuario, total, estado) VALUES (?, ?, ?)",
             [id_usuario, monto_total, 'Completado']
         )
-        id_pedido = res_ped.last_insert_rowid
+        
+        res_ped_id = db.execute("SELECT id_pedido FROM pedidos WHERE id_usuario = ? ORDER BY id_pedido DESC LIMIT 1", [id_usuario])
+        id_pedido = res_ped_id.rows[0][0] if len(res_ped_id.rows) > 0 else None
 
         for item in items:
             subtotal = float(item['precio']) * int(item['cantidad'])
