@@ -302,7 +302,7 @@ def crear_pedido():
         monto_total = sum(float(item['precio']) * int(item['cantidad']) for item in items)
 
         db.execute(
-            "INSERT INTO pedidos (id_usuario, total, estado) VALUES (?, ?, ?)",
+            "INSERT INTO pedidos (id_usuario, monto_total, estado_pedido) VALUES (?, ?, ?)",
             [id_usuario, monto_total, 'Completado']
         )
         
@@ -310,10 +310,9 @@ def crear_pedido():
         id_pedido = res_ped_id.rows[0][0] if len(res_ped_id.rows) > 0 else None
 
         for item in items:
-            subtotal = float(item['precio']) * int(item['cantidad'])
             db.execute(
-                "INSERT INTO detalle_pedidos (id_pedido, id_producto, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)",
-                [id_pedido, item['id_producto'], item['cantidad'], item['precio'], subtotal]
+                "INSERT INTO detalles_pedido (id_pedido, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)",
+                [id_pedido, item['id_producto'], item['cantidad'], item['precio']]
             )
 
         pdf_bytes = generar_pdf_bytes(id_pedido, usuario, items, monto_total)
@@ -322,7 +321,7 @@ def crear_pedido():
         return jsonify({'exito': True, 'id_pedido': id_pedido})
     except Exception as e:
         print("Error en crear_pedido:", e)
-        return jsonify({'exito': False, 'mensaje': str(e)}), 500
+        return jsonify({'exito': False, 'mensaje': f'Error al procesar el pedido: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
