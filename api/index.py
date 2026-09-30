@@ -168,17 +168,17 @@ def registro():
 
     try:
         db = get_db_client()
-        res = db.execute("SELECT id_usuario FROM usuarios WHERE correo = ?", [correo])
+        res = db.execute("SELECT id_usuario FROM usuarios WHERE correo_electronico = ?", [correo])
         if len(res.rows) > 0:
             return jsonify({'exito': False, 'mensaje': 'El correo ya está registrado'}), 400
 
         hash_pass = generate_password_hash(contrasena)
         db.execute(
-            "INSERT INTO usuarios (nombre, correo, telefono, contrasena) VALUES (?, ?, ?, ?)",
-            [nombre, correo, telefono, hash_pass]
+            "INSERT INTO usuarios (nombre, telefono, correo_electronico, contrasena) VALUES (?, ?, ?, ?)",
+            [nombre, telefono, correo, hash_pass]
         )
         
-        res_nuevo = db.execute("SELECT id_usuario FROM usuarios WHERE correo = ?", [correo])
+        res_nuevo = db.execute("SELECT id_usuario FROM usuarios WHERE correo_electronico = ?", [correo])
         id_nuevo = res_nuevo.rows[0][0] if len(res_nuevo.rows) > 0 else None
 
         usuario = {
@@ -200,7 +200,7 @@ def login():
 
     try:
         db = get_db_client()
-        res = db.execute("SELECT id_usuario, nombre, correo, telefono, contrasena FROM usuarios WHERE correo = ?", [correo])
+        res = db.execute("SELECT id_usuario, nombre, correo_electronico, telefono, contrasena FROM usuarios WHERE correo_electronico = ?", [correo])
         if len(res.rows) == 0:
             return jsonify({'exito': False, 'mensaje': 'Credenciales inválidas'}), 401
 
@@ -287,7 +287,7 @@ def crear_pedido():
 
     try:
         db = get_db_client()
-        res_usr = db.execute("SELECT nombre, correo, telefono FROM usuarios WHERE id_usuario = ?", [id_usuario])
+        res_usr = db.execute("SELECT nombre, correo_electronico, telefono FROM usuarios WHERE id_usuario = ?", [id_usuario])
         if len(res_usr.rows) == 0:
             return jsonify({'exito': False, 'mensaje': 'Usuario no existe'}), 404
         
