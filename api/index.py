@@ -229,7 +229,7 @@ def login():
 def obtener_categorias():
     try:
         db = get_db_client()
-        res = db.execute("SELECT DISTINCT categoria FROM productos WHERE categoria IS NOT NULL")
+        res = db.execute("SELECT DISTINCT categoria FROM productos WHERE categoria IS NOT NULL AND estado = 1")
         categorias = [row[0] for row in res.rows if row[0]]
         return jsonify({'exito': True, 'categorias': categorias})
     except Exception as e:
@@ -241,9 +241,9 @@ def obtener_productos():
     try:
         db = get_db_client()
         if categoria and categoria.lower() != 'todas':
-            res = db.execute("SELECT id_producto, nombre, descripcion, precio, imagen_url, categoria FROM productos WHERE categoria = ?", [categoria])
+            res = db.execute("SELECT id_producto, nombre, descripcion, precio, imagen_url, categoria FROM productos WHERE categoria = ? AND estado = 1", [categoria])
         else:
-            res = db.execute("SELECT id_producto, nombre, descripcion, precio, imagen_url, categoria FROM productos")
+            res = db.execute("SELECT id_producto, nombre, descripcion, precio, imagen_url, categoria FROM productos WHERE estado = 1")
         
         productos = []
         for r in res.rows:
@@ -263,7 +263,7 @@ def obtener_productos():
 def obtener_producto_detalle(id_producto):
     try:
         db = get_db_client()
-        res = db.execute("SELECT id_producto, nombre, descripcion, precio, imagen_url, categoria FROM productos WHERE id_producto = ?", [id_producto])
+        res = db.execute("SELECT id_producto, nombre, descripcion, precio, imagen_url, categoria FROM productos WHERE id_producto = ? AND estado = 1", [id_producto])
         if len(res.rows) == 0:
             return jsonify({'exito': False, 'mensaje': 'Producto no encontrado'}), 404
         
